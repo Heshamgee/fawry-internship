@@ -21,7 +21,7 @@
          ping internal.example.com
     d. Compare with using 8.8.8.8 manually:
          drill internal.example.com @8.8.8.8
-    {1.PNG}
+    {Q2/1.PNG}
 2.Diagnose Service Reachability:
 
   a. ping the container's own IP:
