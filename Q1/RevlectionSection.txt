@@ -1,32 +1,31 @@
-?? Reflective Section
-1. Breakdown of Argument and Option Handling:
+Reflective Section
+1. How the script handles arguments and options
 
-    The script first checks for --help or no arguments.
+    It first checks for --help.
 
-    It uses a while loop to process all options starting with -.
+    Then uses getopts to parse -n and -v.
 
-    It supports combined options like -vn or -nv.
+    After options are handled, it expects exactly two arguments: the search string and filename.
 
-    After parsing, it expects exactly two arguments: search_string and filename.
+    It checks if the file exists.
 
-    It checks if the file exists before proceeding.
+    It reads the file line-by-line, matching case-insensitively.
 
-    It reads the file line by line, checks matches case-insensitively, and applies options accordingly (-n and/or -v).
+    Based on -v and -n, it prints the correct output format.
 
-2. How would the structure change for regex or new options?
+2. If supporting regex, -i, -c, or -l
 
-If I wanted to add support for:
+    For regex: use full grep -E internally instead of just grep -F.
 
-    Regex: I would replace the simple [[ "$line" =~ $search_string ]] with more careful quoting and perhaps grep -E.
+    For -i: Case insensitivity already exists here, but could be more cleanly integrated using flags inside grep.
 
-    -i (case-insensitive): Already kind of implemented, but would split matching logic more cleanly to be optional.
+    For -c (count matches): add a counter and print the number of matches instead of lines.
 
-    -c (count): I would introduce a counter variable and output it at the end instead of matching lines.
+    For -l (list file name if match found): detect the first match, print the filename once, and exit early.
 
-    -l (list file names with matches): I would just print the filename if there’s at least one match and then exit.
+I would redesign the structure so options are stored in variables (like case_insensitive=true) and build a dynamic grep command internally (e.g., grep_options="" then adding -i, -c, etc.).
 
-I would definitely rework the script to use getopts, which would better scale when handling multiple options.
-3. Hardest Part
+3. Hardest part
 
-Handling combined options like -vn without getopts was the trickiest.
-Since normal getopts doesn't handle combined flags (-vn) automatically without special code, I manually handled -vn and -nv cases together, keeping the script simple but working for this assignment.
+  The hardest part was handling inverted match (-v) cleanly while preserving case-insensitive searching.
+  Because simple bash conditions don't behave well when flipping logic (! true isn't directly valid inside [[ ]]), special care was needed when deciding what to     print.

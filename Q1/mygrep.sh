@@ -1,73 +1,76 @@
 #!/bin/bash
 
-# Usage function
-usage() {
+# Show help if --help is provided
+if [[ "$1" == "--help" ]]; then
     echo "Usage: $0 [-n] [-v] search_string filename"
     echo "Options:"
     echo "  -n    Show line numbers"
-    echo "  -v    Invert match (show lines that do NOT match)"
-    echo "  --help Show this help message"
-    exit 1
-}
-
-# Check if no arguments or help requested
-if [[ $# -eq 0 || "$1" == "--help" ]]; then
-    usage
+    echo "  -v    Invert match"
+    exit 0
 fi
 
-# Initialize option flags
+# Option parsing
 show_line_numbers=false
 invert_match=false
 
-# Parse options
-while [[ "$1" == -* ]]; do
-    case "$1" in
-        -n) show_line_numbers=true ;;
-        -v) invert_match=true ;;
-        -vn|-nv)
-            show_line_numbers=true
-            invert_match=true
-            ;;
-        *)
-            echo "Unknown option: $1"
-            usage
-            ;;
-    esac
-    shift
+# Handle options
+while getopts ":nv" opt; do
+  case $opt in
+    n)
+      show_line_numbers=true
+      ;;
+    v)
+      invert_match=true
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+  esac
 done
 
-# After options, expect two arguments
-if [[ $# -lt 2 ]]; then
+shift $((OPTIND-1))
+
+# Argument checking
+if [ "$#" -lt 2 ]; then
     echo "Error: Missing search string or filename."
-    usage
+    echo "Usage: $0 [-n] [-v] search_string filename"
+    exit 1
 fi
 
-search_string="$1"
+search="$1"
 file="$2"
 
-# Check if file exists
-if [[ ! -f "$file" ]]; then
+# File existence check
+if [ ! -f "$file" ]; then
     echo "Error: File '$file' not found."
     exit 1
 fi
 
-# Read the file line by line
+# Core logic
 line_number=0
 while IFS= read -r line; do
     ((line_number++))
-
-    if [[ "$line" == *"$search_string"* ]]; then
+    if [[ "$line" =~ $search ]]; then
         match=true
     else
         match=false
     fi
 
-    # Invert match if needed
+    # Case-insensitive match
+    if echo "$line" | grep -iqF "$search"; then
+        match=true
+    else
+        match=false
+    fi
+
+    # Invert match if -v
     if $invert_match; then
-        if $match; then
-            match=false
-        else
+        match=! $match
+        if ! echo "$line" | grep -iqF "$search"; then
             match=true
+        else
+            match=false
         fi
     fi
 
