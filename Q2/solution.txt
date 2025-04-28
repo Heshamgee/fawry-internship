@@ -1,0 +1,107 @@
+#I'll create a complete scenario with a Dockerized Nginx web server
+#and walk through troubleshooting a "host not found" issue similar to my internal dashboard problem.
+ Create the Dockerized Nginx Environment
+ 	#Create a simple Dockerfile
+ 	#Create a sample index.html
+ 	#Build and run the container
+ 	docker build -t internal-nginx .
+ 	docker run -d --name internal-nginx -p 8585:80 internal-nginx
+ Simulate the DNS Issue
+	# First, verify it works normally
+	curl -H "Host: internal.example.com" http://localhost:8585
+----------------------------------------------------------------------------------------------------------------------------------------
+
+1.Verify DNS Resolution inside the nginx:
+
+    a. Check inside the container:
+         docker exec -it internal-nginx sh
+    b. Check /etc/resolv.conf:
+         cat /etc/resolv.conf
+    c. resolving internal.example.com:
+         ping internal.example.com
+    d. Compare with using 8.8.8.8 manually:
+         drill internal.example.com @8.8.8.8
+    
+2.Diagnose Service Reachability:
+
+  a. ping the container's own IP:
+      ip addr
+  b.Inside container:
+      telnet 127.0.0.1 80
+  c. Check Nginx is listening:
+      netstat -tulnp | grep nginx
+  d.Curl by IP:
+      curl http://127.0.0.1
+  e.Curl by hostname (fails):
+      curl http://internal.example.com
+3.Trace the Issue – List All Possible Causes
+    DNS	- /etc/resolv.conf misconfigured
+    DNS	- Domain internal.example.com not registered
+    DNS	- Internal DNS server down or unreachable
+    Network	- IP address conflict
+    Network	- Firewall blocking DNS (port 53)
+    Application	- Nginx running but not listening on right IP/interface
+    
+4.Propose and Apply Fixes
+    Problem 1: /etc/resolv.conf Wrong or Empty
+              Confirm:
+              
+              cat /etc/resolv.conf
+              
+              Fix:
+              
+              (Inside container)
+              
+    Problem 2: Domain Not Registered Anywhere
+               Confirm with dig:
+
+                drill internal.example.com @8.8.8.8
+                
+                Fix (for local testing):
+                
+                Edit /etc/hosts inside container:
+                
+                echo "127.0.0.1 internal.example.com" >> /etc/hosts
+                
+                Then re-test:
+    Problem 3: Service Not Listening on Correct IP
+              Confirm:
+
+              ss -tuln | grep 80
+
+              Fix:
+
+              If nginx config is wrong (listening only on localhost), fix nginx.conf.
+              
+              
+              
+5.Bonus: Bypass DNS with /etc/hosts
+         Inside container:
+
+          echo "127.0.0.1 internal.example.com" >> /etc/hosts
+
+          Outside container (host machine):
+
+          echo "127.0.0.1 internal.example.com" | sudo tee -a /etc/hosts
+
+          Then test:
+
+          curl http://internal.example.com:8080   
+          
+          
+ Bonus 2: Persist DNS Settings (systemd-resolved)
+ 
+         On the host system (if Ubuntu/Debian with systemd):
+
+         sudo systemctl edit systemd-resolved
+
+         Add:
+
+         [Resolve]
+            DNS=8.8.8.8
+            FallbackDNS=1.1.1.1
+            Then:
+
+         sudo systemctl restart systemd-resolved
+           
+

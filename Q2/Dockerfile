@@ -1,3 +1,6 @@
+# Dockerfile
 FROM nginx:alpine
-COPY index.html /usr/share/nginx/html/
+
+RUN echo "Internal Nginx server is up" > /usr/share/nginx/html/index.html
+
 EXPOSE 80
