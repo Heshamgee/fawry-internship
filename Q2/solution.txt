@@ -21,7 +21,7 @@
          ping internal.example.com
     d. Compare with using 8.8.8.8 manually:
          drill internal.example.com @8.8.8.8
-    
+    {1.PNG}
 2.Diagnose Service Reachability:
 
   a. ping the container's own IP:
@@ -34,7 +34,7 @@
       curl http://127.0.0.1
   e.Curl by hostname (fails):
       curl http://internal.example.com
-3.Trace the Issue – List All Possible Causes
+3.Trace the Issue â€“ List All Possible Causes
     DNS	- /etc/resolv.conf misconfigured
     DNS	- Domain internal.example.com not registered
     DNS	- Internal DNS server down or unreachable
