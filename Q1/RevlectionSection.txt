@@ -1,0 +1,32 @@
+?? Reflective Section
+1. Breakdown of Argument and Option Handling:
+
+    The script first checks for --help or no arguments.
+
+    It uses a while loop to process all options starting with -.
+
+    It supports combined options like -vn or -nv.
+
+    After parsing, it expects exactly two arguments: search_string and filename.
+
+    It checks if the file exists before proceeding.
+
+    It reads the file line by line, checks matches case-insensitively, and applies options accordingly (-n and/or -v).
+
+2. How would the structure change for regex or new options?
+
+If I wanted to add support for:
+
+    Regex: I would replace the simple [[ "$line" =~ $search_string ]] with more careful quoting and perhaps grep -E.
+
+    -i (case-insensitive): Already kind of implemented, but would split matching logic more cleanly to be optional.
+
+    -c (count): I would introduce a counter variable and output it at the end instead of matching lines.
+
+    -l (list file names with matches): I would just print the filename if there’s at least one match and then exit.
+
+I would definitely rework the script to use getopts, which would better scale when handling multiple options.
+3. Hardest Part
+
+Handling combined options like -vn without getopts was the trickiest.
+Since normal getopts doesn't handle combined flags (-vn) automatically without special code, I manually handled -vn and -nv cases together, keeping the script simple but working for this assignment.
